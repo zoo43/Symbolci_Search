@@ -1,5 +1,8 @@
 import pynusmv
+from pynusmv.fsm import BddTrans
 import sys
+
+
 
 def spec_to_bdd(model, spec):
     """
@@ -25,8 +28,35 @@ def check_explain_inv_spec(spec):
     where keys are state and inputs variable of the loaded SMV model, and values
     are their value.
     """
+    #print(spec)S
     ltlspec = pynusmv.prop.g(spec)
-    res, trace = pynusmv.mc.check_explain_ltl_spec(ltlspec)
+    fsm = pynusmv.glob.prop_database().master.bddFsm
+    
+    print(fsm.count_states(fsm.init))
+
+    
+    s = fsm.init
+ #   for state in fsm.pick_all_states(s):
+   #     print(state.get_str_values())
+
+
+
+#    for state in fsm.pick_all_states(fsm.trans.post(fsm.trans.post(fsm.init))):
+  #      print(state.get_str_values())
+
+
+    for i in range (0,15):
+        for state in fsm.pick_all_states(s):
+            s = fsm.trans.post(s)
+            print(state.get_str_values())
+    
+
+
+
+   # for state in fsm.pick_all_states(fsm.trans):
+    #    print(state.get_str_values())
+    res, trace = True,None
+    #res, trace = pynusmv.mc.check_explain_ltl_spec(ltlspec)
     return res, trace
 
 if len(sys.argv) != 2:

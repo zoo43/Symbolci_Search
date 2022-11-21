@@ -13,4 +13,4 @@ TRANS
   esac
 
 INVARSPEC y < 7
-INVARSPEC y <= 7
+--INVARSPEC y <= 7
