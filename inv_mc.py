@@ -29,14 +29,8 @@ def check_explain_inv_spec(spec):
     are their value.
     """
     #print(spec)S
-    ltlspec = pynusmv.prop.g(spec)
-    fsm = pynusmv.glob.prop_database().master.bddFsm
-    
-    print(fsm.count_states(fsm.init))
 
-    
-    s = fsm.init
- #   for state in fsm.pick_all_states(s):
+     #   for state in fsm.pick_all_states(s):
    #     print(state.get_str_values())
 
 
@@ -45,16 +39,35 @@ def check_explain_inv_spec(spec):
   #      print(state.get_str_values())
 
 
-    for i in range (0,15):
-        for state in fsm.pick_all_states(s):
-            s = fsm.trans.post(s)
-            print(state.get_str_values())
-    
+    #for i in range (0,15):
+    #    for state in fsm.pick_all_states(s):
+    #        s = fsm.trans.post(s)
+    #        print(state.get_str_values())
 
-
-
-   # for state in fsm.pick_all_states(fsm.trans):
+       # for state in fsm.pick_all_states(fsm.trans):
     #    print(state.get_str_values())
+    ltlspec = pynusmv.prop.g(spec)
+    fsm = pynusmv.glob.prop_database().master.bddFsm
+       
+    reach = fsm.init
+    new = fsm.init
+
+
+    new = fsm.trans.post(new)
+
+    while new.size != 0:
+        if new.intersection(spec_to_bdd(fsm,ltlspec)).size!=0:
+            return True, None
+
+        new = fsm.trans.post(new).diff(reach)
+        #print(new) pick all states
+        reach = reach.union(new)
+
+    return False,"paolo"
+
+
+
+
     res, trace = True,None
     #res, trace = pynusmv.mc.check_explain_ltl_spec(ltlspec)
     return res, trace
