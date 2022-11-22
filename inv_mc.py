@@ -56,7 +56,7 @@ def check_explain_inv_spec(spec):
     new = fsm.trans.post(new)
 
     while new.size != 0:
-        if new.intersection(spec_to_bdd(fsm,ltlspec)).size!=0:
+        if new.intersected(spec_to_bdd(fsm,spec)):
             return True, None
 
         new = fsm.trans.post(new).diff(reach)
