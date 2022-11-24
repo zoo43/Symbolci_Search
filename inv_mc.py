@@ -11,6 +11,11 @@ def spec_to_bdd(model, spec):
     bddspec = pynusmv.mc.eval_ctl_spec(model, spec)
     return bddspec
 
+def get_all_pre(fsm, state):
+    while (state != fsm.init):
+        print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
+        state = fsm.trans.pre(state)
+
 def check_explain_inv_spec(spec):
     """
     Return whether the loaded SMV model satisfies or not the invariant
@@ -28,33 +33,18 @@ def check_explain_inv_spec(spec):
     where keys are state and inputs variable of the loaded SMV model, and values
     are their value.
     """
-    #print(spec)S
 
-     #   for state in fsm.pick_all_states(s):
-   #     print(state.get_str_values())
-
-
-
-#    for state in fsm.pick_all_states(fsm.trans.post(fsm.trans.post(fsm.init))):
-  #      print(state.get_str_values())
-
-
-    #for i in range (0,15):
-    #    for state in fsm.pick_all_states(s):
-    #        s = fsm.trans.post(s)
-    #        print(state.get_str_values())
-
-       # for state in fsm.pick_all_states(fsm.trans):
-    #    print(state.get_str_values())
-    ltlspec = pynusmv.prop.g(spec)
+    #ltlspec = pynusmv.prop.g(spec)
     fsm = pynusmv.glob.prop_database().master.bddFsm
-       
+    
     reach = fsm.init
     new = fsm.init
+    get_all_pre(fsm, fsm.trans.post(fsm.trans.post(new)))
+    #for state in fsm.pick_all_states(fsm.trans.pre(fsm.trans.post(fsm.trans.post(new)))):
+    #    print(state.get_str_values())
 
-
-    new = fsm.trans.post(new)
-
+    #new = fsm.trans.post(new)
+    #print (pynusmv.dd.StateInputs(new, fsm))
     while new.size != 0:
         if new.intersected(spec_to_bdd(fsm,spec)):
             return True, None
