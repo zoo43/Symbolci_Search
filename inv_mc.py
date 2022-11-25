@@ -39,13 +39,21 @@ def check_explain_inv_spec(spec):
     
     reach = fsm.init
     new = fsm.init
-    get_all_pre(fsm, fsm.trans.post(fsm.trans.post(new)))
+    #get_all_pre(fsm, fsm.trans.post(fsm.trans.post(new)))
     #for state in fsm.pick_all_states(fsm.trans.pre(fsm.trans.post(fsm.trans.post(new)))):
     #    print(state.get_str_values())
 
     #new = fsm.trans.post(new)
     #print (pynusmv.dd.StateInputs(new, fsm))
-    while new.size != 0:
+    while new.size != 1:
+        if new.intersected(spec_to_bdd(fsm, spec)) == False:
+            return False, "paolo"
+        else:
+            new = fsm.trans.post(new).diff(reach)
+            reach = reach.union(new)
+    return True, None      
+    """
+    while new.size != 1:
         if new.intersected(spec_to_bdd(fsm,spec)):
             return True, None
 
@@ -54,14 +62,14 @@ def check_explain_inv_spec(spec):
         reach = reach.union(new)
 
     return False,"paolo"
-
+    
 
 
 
     res, trace = True,None
     #res, trace = pynusmv.mc.check_explain_ltl_spec(ltlspec)
     return res, trace
-
+    """
 if len(sys.argv) != 2:
     print("Usage:", sys.argv[0], "filename.smv")
     sys.exit(1)
