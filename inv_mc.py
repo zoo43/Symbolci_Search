@@ -12,9 +12,13 @@ def spec_to_bdd(model, spec):
     return bddspec
 
 def get_all_pre(fsm, state):
+    string = ""
     while (state != fsm.init):
-        print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
+        string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + string 
+        #print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
         state = fsm.trans.pre(state)
+    string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + string 
+    return string
 
 def check_explain_inv_spec(spec):
     """
@@ -47,7 +51,7 @@ def check_explain_inv_spec(spec):
     #print (pynusmv.dd.StateInputs(new, fsm))
     while new.size != 1:
         if new.intersected(spec_to_bdd(fsm, spec)) == False:
-            return False, "paolo"
+            return False, get_all_pre(fsm, new)
         else:
             new = fsm.trans.post(new).diff(reach)
             reach = reach.union(new)
