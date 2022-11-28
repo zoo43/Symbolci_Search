@@ -46,29 +46,35 @@ def check_explain_inv_spec(spec):
     #get_all_pre(fsm, fsm.trans.post(fsm.trans.post(new)))
     #for state in fsm.pick_all_states(fsm.trans.pre(fsm.trans.post(fsm.trans.post(new)))):
     #    print(state.get_str_values())
-
     #new = fsm.trans.post(new)
     #print (pynusmv.dd.StateInputs(new, fsm))
+    checkInvar = True
+    new1 = None
     while new.size != 1:
         if new.intersected(spec_to_bdd(fsm, spec)) == False:
-            return False, get_all_pre(fsm, new)
-        else:
-            new = fsm.trans.post(new).diff(reach)
-            reach = reach.union(new)
-    return True, None      
+            checkInvar = False 
+        
+        new1 = new
+        new = fsm.trans.post(new).diff(reach)
+        reach = reach.union(new)
+        #print (pynusmv.dd.State.from_bdd(new, fsm).get_str_values())
+    if checkInvar == False:
+        return False, get_all_pre(fsm, new1) + pynusmv.dd.State.from_bdd(fsm.trans.post(new1), fsm).get_str_values().__str__()
+    else:
+        return True, None      
+    
     """
-    while new.size != 1:
+    while new.intersected(new):
         if new.intersected(spec_to_bdd(fsm,spec)):
-            return True, None
-
+            True, None
+        else:
+            checkInvar = False
         new = fsm.trans.post(new).diff(reach)
         #print(new) pick all states
         reach = reach.union(new)
 
-    return False,"paolo"
-    
-
-
+    if(checkInvar == False):
+        return False,get_all_pre(fsm, new)
 
     res, trace = True,None
     #res, trace = pynusmv.mc.check_explain_ltl_spec(ltlspec)
