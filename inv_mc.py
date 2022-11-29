@@ -48,18 +48,22 @@ def check_explain_inv_spec(spec):
     #    print(state.get_str_values())
     #new = fsm.trans.post(new)
     #print (pynusmv.dd.StateInputs(new, fsm))
+    counter = 0
     checkInvar = True
     new1 = None
+    passed = ""
     while new.size != 1:
+        print(counter)
+        counter = counter + 1
         if new.intersected(spec_to_bdd(fsm, spec)) == False:
             checkInvar = False 
-        
+        passed = passed + pynusmv.dd.State.from_bdd(fsm.trans.post(new), fsm).get_str_values().__str__() + ", "
         new1 = new
         new = fsm.trans.post(new).diff(reach)
         reach = reach.union(new)
         #print (pynusmv.dd.State.from_bdd(new, fsm).get_str_values())
     if checkInvar == False:
-        return False, get_all_pre(fsm, new1) + pynusmv.dd.State.from_bdd(fsm.trans.post(new1), fsm).get_str_values().__str__()
+        return False, passed + pynusmv.dd.State.from_bdd(fsm.trans.post(new1), fsm).get_str_values().__str__()
     else:
         return True, None      
     
