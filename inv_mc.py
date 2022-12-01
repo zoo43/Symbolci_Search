@@ -20,6 +20,17 @@ def get_all_pre(fsm, state):
     string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + string 
     return string
 
+def reachable(fsm):
+    """
+    Returns the set of reachable states in the FSM
+    """
+    reach = fsm.init
+    new = fsm.init
+    while new.size != 1:
+        new = fsm.post(new, None).diff(reach)
+        reach = reach.union(new)
+    return reach
+
 def check_explain_inv_spec(spec):
     """
     Return whether the loaded SMV model satisfies or not the invariant
@@ -37,53 +48,16 @@ def check_explain_inv_spec(spec):
     where keys are state and inputs variable of the loaded SMV model, and values
     are their value.
     """
-
-    #ltlspec = pynusmv.prop.g(spec)
     fsm = pynusmv.glob.prop_database().master.bddFsm
-    
-    reach = fsm.init
-    new = fsm.init
-    #get_all_pre(fsm, fsm.trans.post(fsm.trans.post(new)))
-    #for state in fsm.pick_all_states(fsm.trans.pre(fsm.trans.post(fsm.trans.post(new)))):
-    #    print(state.get_str_values())
-    #new = fsm.trans.post(new)
-    #print (pynusmv.dd.StateInputs(new, fsm))
-    counter = 0
-    checkInvar = True
-    new1 = None
-    passed = ""
-    while new.size != 1:
-        print(counter)
-        counter = counter + 1
-        if new.intersected(spec_to_bdd(fsm, spec)) == False:
-            checkInvar = False 
-        passed = passed + pynusmv.dd.State.from_bdd(fsm.trans.post(new), fsm).get_str_values().__str__() + ", "
-        new1 = new
-        new = fsm.trans.post(new).diff(reach)
-        reach = reach.union(new)
-        #print (pynusmv.dd.State.from_bdd(new, fsm).get_str_values())
-    if checkInvar == False:
-        return False, passed + pynusmv.dd.State.from_bdd(fsm.trans.post(new1), fsm).get_str_values().__str__()
-    else:
-        return True, None      
-    
-    """
-    while new.intersected(new):
-        if new.intersected(spec_to_bdd(fsm,spec)):
-            True, None
-        else:
-            checkInvar = False
-        new = fsm.trans.post(new).diff(reach)
-        #print(new) pick all states
-        reach = reach.union(new)
+    reachableStatesBDD = reachable(fsm)
+    if(reachableStatesBDD.intersected(spec_to_bdd(fsm, spec).not_())):
+        intersection = reachableStatesBDD.intersection(spec_to_bdd(fsm, spec).not_())
+        return False, pynusmv.dd.State.from_bdd(intersection, fsm).get_str_values().__str__()
+    return True, None
 
-    if(checkInvar == False):
-        return False,get_all_pre(fsm, new)
 
-    res, trace = True,None
-    #res, trace = pynusmv.mc.check_explain_ltl_spec(ltlspec)
-    return res, trace
-    """
+
+
 if len(sys.argv) != 2:
     print("Usage:", sys.argv[0], "filename.smv")
     sys.exit(1)
