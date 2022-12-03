@@ -13,23 +13,37 @@ def spec_to_bdd(model, spec):
 
 def get_all_pre(fsm, state):
     string = ""
-    while (state != fsm.init):
-        string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + string 
-        #print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
-        state = fsm.trans.pre(state)
-    string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + string 
+    while (state.intersected(fsm.init) == False):
+        state = fsm.pre(state)
+        print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
     return string
 
-def reachable(fsm):
+def get_all_post(fsm, state):
+    string = ""
+    while (state.intersected(fsm.init) == False):
+        string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", {}, " + string 
+        #print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
+        state = fsm.trans.post(state)
+    #string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", {}, " + string 
+    return string
+
+def reachable(fsm, spec):
     """
     Returns the set of reachable states in the FSM
     """
     reach = fsm.init
     new = fsm.init
+    #st = ""
+    checkInvar = True, new#, st
+    found = False
     while new.size != 1:
+        #st = st + pynusmv.dd.State.from_bdd(new, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(new,fsm).get_str_values().__str__() + ", "
+        if(new.intersected(spec_to_bdd(fsm, spec).not_()) and found == False):
+            checkInvar = False, new.intersection(spec_to_bdd(fsm, spec).not_())#, st
+            found = True
         new = fsm.post(new, None).diff(reach)
         reach = reach.union(new)
-    return reach
+    return checkInvar
 
 def check_explain_inv_spec(spec):
     """
@@ -49,11 +63,12 @@ def check_explain_inv_spec(spec):
     are their value.
     """
     fsm = pynusmv.glob.prop_database().master.bddFsm
-    reachableStatesBDD = reachable(fsm)
-    if(reachableStatesBDD.intersected(spec_to_bdd(fsm, spec).not_())):
-        intersection = reachableStatesBDD.intersection(spec_to_bdd(fsm, spec).not_())
-        return False, pynusmv.dd.State.from_bdd(intersection, fsm).get_str_values().__str__()
-    return True, None
+    invResp, reachableStatesBDD = reachable(fsm, spec)
+    #if(reachableStatesBDD.intersected(spec_to_bdd(fsm, spec).not_())):
+    #    intersection = reachableStatesBDD.intersection(spec_to_bdd(fsm, spec).not_())
+        #print(pynusmv.dd.Inputs.from_bdd(intersection, fsm).get_str_values())
+    return invResp, None#get_all_pre(fsm, reachableStatesBDD)
+    #return True, None
 
 
 
