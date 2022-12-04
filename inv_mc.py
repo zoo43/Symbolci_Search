@@ -38,8 +38,10 @@ def reachable(fsm, spec):
     found = False
     while new.size != 1:
         #st = st + pynusmv.dd.State.from_bdd(new, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(new,fsm).get_str_values().__str__() + ", "
-        if(new.intersected(spec_to_bdd(fsm, spec).not_()) and found == False):
-            checkInvar = False, new.intersection(spec_to_bdd(fsm, spec).not_())#, st
+        #If the intersection of states that I can reach is not empty. Then those states are not reachable and I have to use them to check things
+        spec_bbd = spec_to_bdd(fsm, spec)
+        if(new.intersected(spec_bbd.not_()) and found == False):
+            checkInvar = False, new.intersection(spec_bbd.not_())#, st
             found = True
         new = fsm.post(new, None).diff(reach)
         reach = reach.union(new)
@@ -63,11 +65,13 @@ def check_explain_inv_spec(spec):
     are their value.
     """
     fsm = pynusmv.glob.prop_database().master.bddFsm
+    fsm.pick_all_inputs
     invResp, reachableStatesBDD = reachable(fsm, spec)
+    trace = get_all_pre(fsm,reachableStatesBDD)
     #if(reachableStatesBDD.intersected(spec_to_bdd(fsm, spec).not_())):
     #    intersection = reachableStatesBDD.intersection(spec_to_bdd(fsm, spec).not_())
         #print(pynusmv.dd.Inputs.from_bdd(intersection, fsm).get_str_values())
-    return invResp, None#get_all_pre(fsm, reachableStatesBDD)
+    return invResp, trace#get_all_pre(fsm, reachableStatesBDD)
     #return True, None
 
 
