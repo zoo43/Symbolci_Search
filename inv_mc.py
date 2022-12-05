@@ -45,7 +45,7 @@ def reachable(fsm, spec):
             found = True
         new = fsm.post(new, None).diff(reach)
         reach = reach.union(new)
-    return checkInvar
+    return checkInvar, reach
 
 def check_explain_inv_spec(spec):
     """
@@ -67,11 +67,22 @@ def check_explain_inv_spec(spec):
     fsm = pynusmv.glob.prop_database().master.bddFsm
     fsm.pick_all_inputs
     invResp, reachableStatesBDD = reachable(fsm, spec)
-    trace = get_all_pre(fsm,reachableStatesBDD)
+    invarResp, counterExample = invResp
+    state = counterExample
+    trace = ""
+    trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
+    while (state.intersected(fsm.init) == False):
+        getPreState = fsm.pre(state).intersection(reachableStatesBDD)
+        trace = pynusmv.dd.State.from_bdd(getPreState, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(getPreState, state), fsm).get_str_values().__str__() + ", " + trace
+        #trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + "---->" + (','.join([str(i.get_str_values().__str__()) for i in fsm.pick_all_states(fsm.pre(state))])) + "\n"
+        state = fsm.pre(state).intersection(fsm.reachable_states)
+        print(trace)
+    trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + trace
+    #print(pynusmv.dd.State.from_bdd(fsm.pre(reachableStatesBDD), fsm).get_str_values().__str__() + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(fsm.pre(reachableStatesBDD), reachableStatesBDD), fsm).get_str_values().__str__())
     #if(reachableStatesBDD.intersected(spec_to_bdd(fsm, spec).not_())):
     #    intersection = reachableStatesBDD.intersection(spec_to_bdd(fsm, spec).not_())
         #print(pynusmv.dd.Inputs.from_bdd(intersection, fsm).get_str_values())
-    return invResp, trace#get_all_pre(fsm, reachableStatesBDD)
+    return invarResp, trace#get_all_pre(fsm, reachableStatesBDD)
     #return True, None
 
 
