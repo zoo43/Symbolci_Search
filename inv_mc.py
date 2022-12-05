@@ -75,19 +75,19 @@ def check_explain_inv_spec(spec):
         getPreState = fsm.pre(state).intersection(reachableStatesBDD)
         trace = pynusmv.dd.State.from_bdd(getPreState, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(getPreState, state), fsm).get_str_values().__str__() + ", " + trace
         prevState = state
-        state = fsm.pre(state).intersection(fsm.reachable_states)
+        state = fsm.pre(state).intersection(reachableStatesBDD)
 
 
-    trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(state, prevState), fsm).get_str_values().__str__() + ", " + trace
+    #trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(state, prevState), fsm).get_str_values().__str__() + ", " + trace
     #postState = state
+    trace = trace + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(counterExample, fsm.post(counterExample).intersection(reachableStatesBDD)), fsm).get_str_values().__str__() + ", " + pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
     state = fsm.post(counterExample).intersection(reachableStatesBDD)
-    trace = trace + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(counterExample, state), fsm).get_str_values().__str__() + ", " + pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
     while (state.intersected(fsm.init) == False):
         trace =  trace + ", " 
         getPostState = fsm.post(state).intersection(reachableStatesBDD)
         trace = trace + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(state, getPostState), fsm).get_str_values().__str__() + ", " + pynusmv.dd.State.from_bdd(getPostState, fsm).get_str_values().__str__() 
         postState = state
-        state = fsm.post(state).intersection(fsm.reachable_states)
+        state = fsm.post(state).intersection(reachableStatesBDD)
 
 
     return invarResp, trace#get_all_pre(fsm, reachableStatesBDD)
