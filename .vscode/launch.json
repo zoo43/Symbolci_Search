@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["counter.smv"]
+            "args": ["3bit_counter.smv"]
         }
     ]
 }

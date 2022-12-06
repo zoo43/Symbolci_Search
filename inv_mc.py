@@ -11,22 +11,6 @@ def spec_to_bdd(model, spec):
     bddspec = pynusmv.mc.eval_ctl_spec(model, spec)
     return bddspec
 
-def get_all_pre(fsm, state):
-    string = ""
-    while (state.intersected(fsm.init) == False):
-        state = fsm.pre(state)
-        #print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
-    return string
-
-def get_all_post(fsm, state):
-    string = ""
-    while (state.intersected(fsm.init) == False):
-        string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", {}, " + string 
-        #print(pynusmv.dd.State.from_bdd(state, fsm).get_str_values())
-        state = fsm.trans.post(state)
-    #string = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", {}, " + string 
-    return string
-
 def reachable(fsm, spec):
     """
     Returns the set of reachable states in the FSM
@@ -70,29 +54,12 @@ def check_explain_inv_spec(spec):
     state = counterExample
     trace = ""
     trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
-    prevState = state
     while (state.intersected(fsm.init) == False):
         getPreState = fsm.pre(state).intersection(reachableStatesBDD)
         trace = pynusmv.dd.State.from_bdd(getPreState, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(getPreState, state), fsm).get_str_values().__str__() + ", " + trace
-        prevState = state
-        state = fsm.pre(state).intersection(reachableStatesBDD)
+        state = getPreState
 
-
-    #trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(state, prevState), fsm).get_str_values().__str__() + ", " + trace
-    #postState = state
-    trace = trace + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(counterExample, fsm.post(counterExample).intersection(reachableStatesBDD)), fsm).get_str_values().__str__() + ", " + pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
-    state = fsm.post(counterExample).intersection(reachableStatesBDD)
-    while (state.intersected(fsm.init) == False):
-        trace =  trace + ", " 
-        getPostState = fsm.post(state).intersection(reachableStatesBDD)
-        trace = trace + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(state, getPostState), fsm).get_str_values().__str__() + ", " + pynusmv.dd.State.from_bdd(getPostState, fsm).get_str_values().__str__() 
-        postState = state
-        state = fsm.post(state).intersection(reachableStatesBDD)
-
-
-    return invarResp, trace#get_all_pre(fsm, reachableStatesBDD)
-    #return True, None
-
+    return invarResp, trace
 
 
 
