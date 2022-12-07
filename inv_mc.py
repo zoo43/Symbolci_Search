@@ -16,20 +16,23 @@ def reachable(fsm, spec):
     Returns the set of reachable states in the FSM
     """
     reach = fsm.init
-    new = fsm.init
-    #st = ""
-    checkInvar = True, new#, st
+    #new = fsm.init
+    new = list ()
+    new.append(fsm.init)
+    checkInvar = True, fsm.init
     found = False
-    while new.size != 1:
-        #st = st + pynusmv.dd.State.from_bdd(new, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(new,fsm).get_str_values().__str__() + ", "
-        #If the intersection of states that I can reach is not empty. Then those states are not reachable and I have to use them to check things
+    counter = 0
+    iteration = 0
+    while new[counter].size != 1:
         spec_bbd = spec_to_bdd(fsm, spec)
-        if(new.intersected(spec_bbd.not_()) and found == False):
-            checkInvar = False, new.intersection(spec_bbd.not_())#, st
+        if(new[counter].intersected(spec_bbd.not_()) and found == False):
+            checkInvar = False, new[counter].intersection(spec_bbd.not_())
             found = True
-        new = fsm.post(new, None).diff(reach)
-        reach = reach.union(new)
-    return checkInvar, reach
+            iteration = counter
+        new.append(fsm.post(new[counter], None).diff(reach))
+        reach = reach.union(new[counter])
+        counter = counter + 1
+    return checkInvar, reach, new, iteration
 
 def check_explain_inv_spec(spec):
     """
@@ -49,15 +52,20 @@ def check_explain_inv_spec(spec):
     are their value.
     """
     fsm = pynusmv.glob.prop_database().master.bddFsm
-    invResp, reachableStatesBDD = reachable(fsm, spec)
+    invResp, reachableStatesBDD, images, intersection = reachable(fsm, spec)
     invarResp, counterExample = invResp
     state = counterExample
     trace = ""
     trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
+    counter = intersection
     while (state.intersected(fsm.init) == False):
-        getPreState = fsm.pre(state).intersection(reachableStatesBDD)
-        trace = pynusmv.dd.State.from_bdd(getPreState, fsm).get_str_values().__str__() + ", " + pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(getPreState, state), fsm).get_str_values().__str__() + ", " + trace
+        #allStates = fsm.pick_all_states(fsm.pre(state).intersection(reachableStatesBDD))
+        getPreState = fsm.pick_one_state(fsm.pre(state).intersection(reachableStatesBDD).intersection(images[counter - 1]))
+        state_to_add = pynusmv.dd.State.from_bdd(getPreState, fsm).get_str_values().__str__() + ", "
+        input_to_add = pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(getPreState, state), fsm).get_str_values().__str__() + ", "
+        trace = state_to_add + input_to_add + trace
         state = getPreState
+        counter = counter - 1
 
     return invarResp, trace
 
