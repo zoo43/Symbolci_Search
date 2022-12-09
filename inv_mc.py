@@ -16,7 +16,6 @@ def reachable(fsm, spec):
     Returns the set of reachable states in the FSM
     """
     reach = fsm.init
-    #new = fsm.init
     new = list ()
     new.append(fsm.init)
     checkInvar = True, fsm.init
@@ -26,13 +25,28 @@ def reachable(fsm, spec):
     while new[counter].size != 1:
         spec_bbd = spec_to_bdd(fsm, spec)
         if(new[counter].intersected(spec_bbd.not_()) and found == False):
-            checkInvar = False, new[counter].intersection(spec_bbd.not_())
+            checkInvar = False, fsm.pick_one_state(new[counter].intersection(spec_bbd.not_()))
+            #lock so 
             found = True
             iteration = counter
         new.append(fsm.post(new[counter], None).diff(reach))
         reach = reach.union(new[counter])
         counter = counter + 1
-    return checkInvar, reach, new, iteration
+    
+    iterationCounter = iteration
+    state = checkInvar[1]
+    #get all the closest initial states from our counterexample state
+    while(iterationCounter > 0):
+        state = fsm.pre(state).intersection(reach)
+        iterationCounter = iterationCounter - 1
+    state = state.intersection(fsm.init)
+    #get all the set of states between the initials and our counterexample
+    postImages = list ()
+    while(iterationCounter < iteration):
+        postImages.append(state)
+        state = fsm.post(state)
+        iterationCounter = iterationCounter + 1
+    return checkInvar, reach, postImages, iteration
 
 def check_explain_inv_spec(spec):
     """
@@ -59,8 +73,7 @@ def check_explain_inv_spec(spec):
     trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
     counter = intersection
     while (state.intersected(fsm.init) == False):
-        #allStates = fsm.pick_all_states(fsm.pre(state).intersection(reachableStatesBDD))
-        getPreState = fsm.pick_one_state(fsm.pre(state).intersection(reachableStatesBDD).intersection(images[counter - 1]))
+        getPreState = fsm.pick_one_state(fsm.pre(state).intersection(images[counter - 1]))
         state_to_add = pynusmv.dd.State.from_bdd(getPreState, fsm).get_str_values().__str__() + ", "
         input_to_add = pynusmv.dd.Inputs.from_bdd(fsm.get_inputs_between_states(getPreState, state), fsm).get_str_values().__str__() + ", "
         trace = state_to_add + input_to_add + trace
