@@ -25,10 +25,10 @@ def reachable(fsm, spec):
     #while new is not empty
     while new.size != 1:
         spec_bbd = spec_to_bdd(fsm, spec)
-        #check if there's a counterexample in our set of states
+        #check if there's a counterexample in our current set of states
         if(new.intersected(spec_bbd.not_()) and not found):
             checkInvar = False, fsm.pick_one_state(new.intersection(spec_bbd.not_()))
-            #lock so we keep the closest invariant to the initial states
+            #lock so we keep the closest counterexample to the initial states
             found = True
             iteration = counter
         #get the next set of states
