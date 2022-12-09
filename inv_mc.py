@@ -13,7 +13,7 @@ def spec_to_bdd(model, spec):
 
 def reachable(fsm, spec):
     """
-    Returns the set of reachable states in the FSM
+    Returns the set of reachable states in the FSM and if a counterexample is found
     """
     #initialize needed variables
     reach = fsm.init
