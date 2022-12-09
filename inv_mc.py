@@ -82,9 +82,9 @@ def check_explain_inv_spec(spec):
 
     state = counterExample
     #print the counter example state
-    trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__()
+    trace = pynusmv.dd.State.from_bdd(state, fsm).get_str_values().__str__() + ")"
     counter = iteration
-    while (not state.intersected(fsm.init) and counter >= 0):
+    while (not state.intersected(fsm.init) and counter > 0):
         #pick one state ensuring we keep only trace to the closest ones
         preState = fsm.pick_one_state(fsm.pre(state).intersection(postImages[counter - 1]))
         #prepare the data to add to print
@@ -95,7 +95,7 @@ def check_explain_inv_spec(spec):
         state = preState
         counter = counter - 1
 
-    return counterFound, trace
+    return counterFound, "(" + trace
 
 
 
