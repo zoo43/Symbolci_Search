@@ -15,6 +15,7 @@ def reachable(fsm, spec):
     """
     Returns the set of reachable states in the FSM
     """
+    #initialize needed variables
     reach = fsm.init
     new = fsm.init
     checkInvar = True, fsm.init
@@ -56,6 +57,7 @@ def check_explain_inv_spec(spec):
     where keys are state and inputs variable of the loaded SMV model, and values
     are their value.
     """
+
     fsm = pynusmv.glob.prop_database().master.bddFsm
     #get invariant response, set of reachable states and 
     #number of iterations to reach the counterexample (from closest initial states)
